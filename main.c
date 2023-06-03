@@ -131,18 +131,18 @@ void simulateAirTrafficControl(int n, int alpha) {
                 Plane* plane = dequeue(&landingQueue);
                 if (plane->fuel <= 1) {
                     control.accidents++; // Incrementa o contador de acidentes
-                    printf("Acidente! Avião com identificador %d caiu por falta de combustível.\n", plane->id);
+                    printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
                 }
                 else if (plane->fuel <= alpha || lanes[2].busy) {
                     lanes[i].busy = 1;
                     plane->isLanded = TRUE;
-                    printf("Aterrissagem (Pista %d): Origem: %s, Horário: %02d:%02d, Situação: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
+                    printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                 }
                 else if (!lanes[i].busy && takeoffQueue.first != NULL) {
                     Plane* takeoffPlane = dequeue(&takeoffQueue);
                     lanes[i].busy = 1;
                     takeoffPlane->isLanded = TRUE;
-                    printf("Decolagem (Pista %d): Destino: %s, Horário: %02d:%02d, Situação: Confirmado\n", i + 1, airports[takeoffPlane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
+                    printf("Decolagem (Pista %d): Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[takeoffPlane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                     enqueue(&takeoffQueue, takeoffPlane);
                 }
                 else {
@@ -181,10 +181,10 @@ void simulateAirTrafficControl(int n, int alpha) {
     printf("Total de atrasos: %d\n", control.late);
     printf("Total de acidentes: %d\n", control.accidents);
     if (control.takeoffs > 0) {
-        printf("Tempo médio de espera para decolagem: %.2f\n", (float)control.lateTakeoffTime / control.takeoffs);
+        printf("Tempo medio de espera para decolagem: %.2f\n", (float)control.lateTakeoffTime / control.takeoffs);
     }
     if (control.landings > 0) {
-        printf("Tempo médio de espera para aterrissagem: %.2f\n", (float)control.lateLandingTime / control.landings);
+        printf("Tempo medio de espera para aterrissagem: %.2f\n", (float)control.lateLandingTime / control.landings);
     }
 }
 
