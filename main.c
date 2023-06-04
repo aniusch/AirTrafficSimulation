@@ -43,6 +43,7 @@ Airport getRandomAirport();
 void enqueue(Queue* queue, Plane* newPlane);
 Plane* dequeue(Queue* queue);
 void simulateAirTrafficControl(int n, int alpha);
+void freeQueue(Queue* queue);
 
 // Gera um número aleatório entre min e max
 int genRandom(int max, int min) {
@@ -300,7 +301,25 @@ void simulateAirTrafficControl(int n, int alpha){
     printf("Total de aterrissagens: %d\n", control.landings);
     printf("Total de atrasos: %d\n", control.late);
     printf("Total de acidentes: %d\n", control.accidents);
+
+    freeQueue(&takeoffQueue);
+    freeQueue(&landingQueue);
+    freeQueue(&emergencyQueue);
+    
+
 }
+
+void freeQueue(Queue* queue){
+    Plane* plane = queue->first;
+    while (plane != NULL) {
+        Plane* nextPlane = plane->next;
+        free(plane);
+        plane = nextPlane;
+    }
+    queue->first = NULL;
+    queue->last = NULL;
+}
+
 int main(int argc, char* argv[]){
     int n;
     n = atoi(argv[1]);
