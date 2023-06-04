@@ -185,7 +185,7 @@ void lane3(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *em
         lanes[2].busy = TRUE;
         plane->isLanded = FALSE;
         control->takeoffs++;
-        waitTime += plane->waitTime;
+        *waitTime += plane->waitTime;
         printf("Decolagem (Pista %d): ID: %d, Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, plane->id, airports[plane->origDest], time / 4, (time  % 4) * 15);
     }
     lanes[2].busy = FALSE;
