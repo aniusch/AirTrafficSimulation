@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+char airports[11][10] = { "RON", "SIN", "ALF", "LRV", "BRS", "BH", "SP", "RJ", "SCLS", "BA", "ASS" };
+
 // Gera um número aleatório entre min e max
 int genRandom(int max, int min) {
     return ((rand() % (max - min + 1)) + min);
@@ -14,9 +16,64 @@ Airport getRandomAirport() {
     return genRandom(ASS, RON);
 }
 
+void previsao(Plane* plane, int time){
+    if(plane->waitTime > 1){
+        int previsao = (time + plane->waitTime);
+        if (plane->type == DECOLAGEM){
+            printf("Decolagem: Destino: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (previsao - 1) / 4, ((previsao - 1) % 4) * 15);
+        }
+        else{
+            printf("Aterrissagem: Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (previsao - 1) / 4, ((previsao - 1) % 4) * 15);
+        }
+    }
+}
+
+
+//Atualizar o combustivel
+void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue){
+    Plane* plane = takeoffQueue->first;
+    while (plane != NULL) {
+        plane->fuel--;
+        plane = plane->next;
+    }
+    plane = landingQueue->first;
+    while (plane != NULL) {
+        plane->fuel--;
+        plane = plane->next;
+    }
+
+    plane = emergencyQueue->first;
+    while (plane != NULL) {
+        plane->fuel--;
+        plane = plane->next;
+    }
+}
+
+// Atualizar o tempo de espera das aeronaves
+void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time){
+    Plane* plane = landingQueue->first;
+    while (plane != NULL) {
+        plane->waitTime++;
+        previsao(plane, time);
+        plane = plane->next;
+    }
+    plane = takeoffQueue->first;
+    while (plane != NULL) {
+        plane->waitTime++;
+        previsao(plane, time);
+        plane = plane->next;
+
+    }
+    plane = emergencyQueue->first;
+    while (plane != NULL) {
+        plane->waitTime++;
+        previsao(plane, time);
+        plane = plane->next;
+    }
+}
+
 // Simula o controle de tráfego aéreo
 void simulateAirTrafficControl(int n, int alpha){
-    char airports[11][10] = { "RON", "SIN", "ALF", "LRV", "BRS", "BH", "SP", "RJ", "SCLS", "BA", "ASS" };
 
     Queue takeoffQueue;
     takeoffQueue.first = NULL;
@@ -50,7 +107,7 @@ void simulateAirTrafficControl(int n, int alpha){
             plane->fuel = genRandom(8, 1);
             plane->origDest = getRandomAirport();
             plane->isLanded = TRUE;
-            plane->type = 1;  // Decolagem
+            plane->type = DECOLAGEM; 
             plane->waitTime = 0;
             control.takeoffsRequests++;
             enqueue(&takeoffQueue, plane);
@@ -63,7 +120,7 @@ void simulateAirTrafficControl(int n, int alpha){
             plane->fuel = genRandom(8, 1);
             plane->origDest = getRandomAirport();
             plane->isLanded = FALSE;
-            plane->type = 0;  // Aterrissagem
+            plane->type = ATERRISSAGEM; 
             plane->waitTime = 0;
             if(plane->fuel > alpha)
                 enqueue(&landingQueue, plane);
@@ -199,37 +256,10 @@ void simulateAirTrafficControl(int n, int alpha){
                 lanes[i].busy = FALSE;
             }
         }
-        // Atualizar o nível de combustível das aeronaves
-        Plane* plane = takeoffQueue.first;
-        while (plane != NULL) {
-            plane->fuel--;
-            plane = plane->next;
-        }
 
-        plane = landingQueue.first;
-        while (plane != NULL) {
-            plane->fuel--;
-            plane = plane->next;
-        }
+        updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue);
+        updateWaitingTime(&takeoffQueue, &landingQueue, &emergencyQueue, &control, time);
 
-        plane = emergencyQueue.first;
-        while (plane != NULL) {
-            plane->fuel--;
-            plane = plane->next;
-        }
-
-        // Atualizar o tempo de espera das aeronaves
-        plane = landingQueue.first;
-        while (plane != NULL) {
-            plane->waitTime++;
-            plane = plane->next;
-        }
-
-        plane = takeoffQueue.first;
-        while (plane != NULL) {
-            plane->waitTime++;
-            plane = plane->next;
-        }
         printf("\n");
     }
 
