@@ -1,6 +1,6 @@
 # trafegoAereo
 
-gcc main.c simulation.c queue.c -o main
+gcc -o scta main.c simulation.c queue.c 
 
 .feat Pedry123
 

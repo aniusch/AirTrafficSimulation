@@ -494,6 +494,7 @@ void simulateAirTrafficControl(int n, int alpha){
     // Exibir informações de controle
     printf("Total de decolagens: %d\n", control.takeoffs);
     printf("Total de aterrissagens: %d\n", control.landings);
+    printf("Total de aterrissagens sem reserva: %d\n", control.landingsWithZeroFuel);
     printf("Total de atrasos: %d\n", control.late);
     printf("Total de acidentes: %d\n", control.accidents);
     averageTime(&taxiQueue, control.landings);
