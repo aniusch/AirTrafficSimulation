@@ -16,6 +16,17 @@ Airport getRandomAirport() {
     return genRandom(ASS, RON);
 }
 
+// Calculo do tempo medio de espera
+void averageTime(Queue* queue, int total){
+    float tempoMedio = 0.0;
+    Plane* plane = queue->first;
+    while (plane != NULL) {
+        tempoMedio += plane->waitTime;
+        plane = plane->next;
+    }
+    printf("Tempo medio de espera: %f\n", tempoMedio / total);
+}
+
 void previsao(Plane* plane, int time){
     if(plane->waitTime > 1){
         int previsao = (time + plane->waitTime);
@@ -268,6 +279,8 @@ void simulateAirTrafficControl(int n, int alpha){
     printf("Total de aterrissagens: %d\n", control.landings);
     printf("Total de atrasos: %d\n", control.late);
     printf("Total de acidentes: %d\n", control.accidents);
+    averageTime(&taxiQueue, control.landings);
+    averageTime(&tookOffQueue, control.takeoffs);
 
     freeQueue(&takeoffQueue);
     freeQueue(&landingQueue);
