@@ -44,21 +44,37 @@ void previsao(Plane* plane, int time, int n){
 }
 
 //Atualizar o combustivel
-void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue){
+void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control){
     Plane* plane = takeoffQueue->first;
     while (plane != NULL) {
         plane->fuel--;
+
+        if (plane->fuel < 0) {
+                control->accidents++; // Incrementa o contador de acidentes
+                printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
+                dequeue(takeoffQueue);
+        }        
         plane = plane->next;
     }
     plane = landingQueue->first;
-    while (plane != NULL) {
+    while (plane != NULL){
         plane->fuel--;
+        if (plane->fuel < 0) {
+                control->accidents++; // Incrementa o contador de acidentes
+                printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
+                dequeue(landingQueue);
+        }
         plane = plane->next;
     }
 
     plane = emergencyQueue->first;
     while (plane != NULL) {
         plane->fuel--;
+        if (plane->fuel < 0) {
+                control->accidents++; // Incrementa o contador de acidentes
+                printf("Acidente! Aviao EMERGENCIAL com identificador %d caiu por falta de combustivel.\n", plane->id);
+                dequeue(emergencyQueue);
+        }
         plane = plane->next;
     }
 }
@@ -191,7 +207,7 @@ void simulateAirTrafficControl(int n, int alpha){
         //solicitar decolagem / pousar emergencial;
         if(emergencyQueue.first != NULL){
             Plane* plane = dequeue(&emergencyQueue);
-            if (plane->fuel < 1) {
+            if (plane->fuel < 0) {
                 control.accidents++; // Incrementa o contador de acidentes
                 printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
                 if(emergencyQueue.first != NULL){
@@ -230,7 +246,7 @@ void simulateAirTrafficControl(int n, int alpha){
         }
         else if (landingQueue.first != NULL){
             Plane* plane = dequeue(&landingQueue);
-            if (plane->fuel < 1 && plane->isLanded == FALSE){
+            if (plane->fuel < 0 && plane->isLanded == FALSE){
                 control.accidents++; // Incrementa o contador de acidentes
                 printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
                 if (landingQueue.first != NULL){
@@ -262,7 +278,7 @@ void simulateAirTrafficControl(int n, int alpha){
             if (emergencyQueue.first != NULL){
                 if(emergencyQueue.first->next != NULL){
                     Plane* plane = dequeue(&emergencyQueue);
-                    if (plane->fuel < 1 && plane->isLanded == FALSE){
+                    if (plane->fuel < 0 && plane->isLanded == FALSE){
                         control.accidents++; // Incrementa o contador de acidentes
                         printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
                         if (emergencyQueue.first != NULL){
@@ -320,7 +336,7 @@ void simulateAirTrafficControl(int n, int alpha){
             }
         }
 
-        updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue);
+        updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue, &control);
         updateWaitingTime(&takeoffQueue, &landingQueue, &emergencyQueue, &control, time, n);
 
         printf("\n");
