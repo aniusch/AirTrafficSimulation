@@ -303,6 +303,9 @@ void simulateAirTrafficControl(int n, int alpha){
 
         //incrementa tempo em uma unidade
         time++;
+        if (time > MAX){
+            time = 0;
+        }
 
         //combustivel eh decrementado em uma unidade
         updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue, &control);
@@ -316,12 +319,11 @@ void simulateAirTrafficControl(int n, int alpha){
 
     while(emergencyQueue.first != NULL || landingQueue.first != NULL || takeoffQueue.first != NULL){
         printf("Horario atual: %02d:%02d\n", (time) / 4, ((time) % 4) * 15);
+       
         //solicitar decolagem / pousar emergencial;
-
         lane3(&control, &takeoffQueue, &landingQueue, &emergencyQueue, lanes, ALPHA, time);
 
         //solicitar aterrissagem
-
         lane1and2(&control, &takeoffQueue, &landingQueue, &emergencyQueue, lanes, ALPHA, time);
 
         //incrementa tempo em uma unidade
@@ -332,8 +334,6 @@ void simulateAirTrafficControl(int n, int alpha){
 
         printf("\n");
     }
-
-
 
     // Exibir informações de controle
     printf("Total de decolagens: %d\n", control.takeoffs);
