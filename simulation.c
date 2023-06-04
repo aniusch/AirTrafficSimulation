@@ -303,9 +303,6 @@ void simulateAirTrafficControl(int n, int alpha){
 
         //incrementa tempo em uma unidade
         time++;
-        if (time > MAX){
-            time = 0;
-        }
 
         //combustivel eh decrementado em uma unidade
         updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue, &control);
@@ -328,6 +325,9 @@ void simulateAirTrafficControl(int n, int alpha){
 
         //incrementa tempo em uma unidade
         time++;
+        if (time > MAX){
+            time = 0;
+        }
         //combustivel eh decrementado em uma unidade
         updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue, &control);
         updateWaitingTime(&takeoffQueue, &landingQueue, &emergencyQueue, &control, time);
