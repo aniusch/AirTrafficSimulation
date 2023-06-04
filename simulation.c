@@ -28,17 +28,9 @@ void averageTime(Queue* queue, int total) {
     printf("Tempo medio de espera aproximadamente: %d minutos\n", tempoMedioMin + 1);
 }
 
-void previsao(Plane* plane, int time, int n){
+void previsao(Plane* plane, int time){
     if(plane->waitTime > 1){
-        if((time + 1) >= n){
-            if(plane->type == DECOLAGEM){
-                printf("Decolagem: ID: %d, Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Apos %02d:%02d\n", plane->id, airports[plane->origDest], (time) / 4, ((time) % 4) * 15, n / 4, ((n % 4) * 15));
-            }
-            else{
-                printf("Aterrissagem: ID: %d, Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Apos %02d:%02d\n", plane->id, airports[plane->origDest], (time) / 4, ((time) % 4) * 15, n / 4, ((n % 4) * 15));
-            }
-        }
-        else if (plane->type == DECOLAGEM){
+        if (plane->type == DECOLAGEM){
             printf("Decolagem: ID: %d, Destino: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: %02d:%02d\n", plane->id, airports[plane->origDest], (time) / 4, ((time) % 4) * 15, (time + 1) / 4, ((time + 1) % 4) * 15);
         }
         else{
@@ -80,7 +72,7 @@ void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue,
 }
 
 // Atualizar o tempo de espera das aeronaves
-void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time, int n){
+void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time){
     Plane* plane = landingQueue->first;
     while (plane != NULL) {
         plane->waitTime++;
@@ -89,7 +81,7 @@ void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergenc
                 plane->isLate = TRUE;
                 control->late++;
             }
-            previsao(plane, time, n);
+            previsao(plane, time);
         }
         plane = plane->next;
     }
@@ -101,7 +93,7 @@ void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergenc
                 plane->isLate = TRUE;
                 control->late++;
             }
-            previsao(plane, time, n);
+            previsao(plane, time);
         }
         plane = plane->next;
 
@@ -114,7 +106,7 @@ void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergenc
                 plane->isLate = TRUE;
                 control->late++;
             }
-            previsao(plane, time, n);
+            previsao(plane, time);
         }
         plane = plane->next;
     }
@@ -260,7 +252,6 @@ void lane1and2(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue
     }
     lanes[0].busy = FALSE;
     lanes[1].busy = FALSE;
-
 }
 
 // Simula o controle de tráfego aéreo
@@ -295,11 +286,9 @@ void simulateAirTrafficControl(int n, int alpha){
     control.late = 0;
     control.accidents = 0;
     control.landingsWithZeroFuel = 0;
+ 
     int time = 0;
 
-    
-    
-    
     while(time != n){
         printf("Horario atual: %02d:%02d\n", (time) / 4, ((time) % 4) * 15);
 
@@ -317,10 +306,34 @@ void simulateAirTrafficControl(int n, int alpha){
 
         //combustivel eh decrementado em uma unidade
         updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue, &control);
-        updateWaitingTime(&takeoffQueue, &landingQueue, &emergencyQueue, &control, time, n);
+        updateWaitingTime(&takeoffQueue, &landingQueue, &emergencyQueue, &control, time);
 
         printf("\n");
     }
+
+    printf("Encerra recebimento de aeronaves\n");
+    printf("\n");
+
+    while(emergencyQueue.first != NULL || landingQueue.first != NULL || takeoffQueue.first != NULL){
+        printf("Horario atual: %02d:%02d\n", (time) / 4, ((time) % 4) * 15);
+        //solicitar decolagem / pousar emergencial;
+
+        lane3(&control, &takeoffQueue, &landingQueue, &emergencyQueue, lanes, ALPHA, time);
+
+        //solicitar aterrissagem
+
+        lane1and2(&control, &takeoffQueue, &landingQueue, &emergencyQueue, lanes, ALPHA, time);
+
+        //incrementa tempo em uma unidade
+        time++;
+        //combustivel eh decrementado em uma unidade
+        updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue, &control);
+        updateWaitingTime(&takeoffQueue, &landingQueue, &emergencyQueue, &control, time);
+
+        printf("\n");
+    }
+
+
 
     // Exibir informações de controle
     printf("Total de decolagens: %d\n", control.takeoffs);
