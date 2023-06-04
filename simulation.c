@@ -94,10 +94,47 @@ void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergenc
         plane = plane->next;
     }
 }
+
+void requests(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, int alpha, int time){
+        // Gerar solicitações de decolagem
+        int takeoffRequests = genRandom(3, 0);
+        for (int i = 0; i < takeoffRequests; i++) {
+            Plane* plane = (Plane*)malloc(sizeof(Plane));
+            plane->id = (control->takeoffsRequests % 2 == 0) ? control->takeoffsRequests + 1 : control->takeoffsRequests;
+            plane->fuel = genRandom(8, 1);
+            plane->origDest = getRandomAirport();
+            plane->isLanded = TRUE;
+            plane->type = 1;  // Decolagem
+            plane->waitTime = 0;
+            printf("Pedido: Decolagem: Destino: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], time / 4, (time % 4) * 15);
+            control->takeoffsRequests++;
+            enqueue(takeoffQueue, plane);
+        }
+        // Gerar solicitações de aterrissagem
+        int landingRequests = genRandom(4, 0);
+        for (int i = 0; i < landingRequests; i++){
+            Plane* plane = (Plane*)malloc(sizeof(Plane));
+            plane->id = (control->landingRequests % 2 == 0) ? control->landingRequests : control->landingRequests + 1;
+            plane->fuel = genRandom(8, 1);
+            plane->origDest = getRandomAirport();
+            plane->isLanded = FALSE;
+            plane->type = 0;  // Aterrissagem
+            plane->waitTime = 0;
+            if(plane->fuel > alpha){
+                enqueue(landingQueue, plane);
+                printf("Pedido: Aterrissagem: Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], time / 4, (time % 4) * 15);
+            }
+            else{
+                enqueue(emergencyQueue, plane);
+                printf("Pedido: Aterrissagem(EMERGENCIAL): Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], time / 4, (time % 4) * 15);
+            }
+            control->landingRequests++;
+        }
+}
+
+
 // Simula o controle de tráfego aéreo
 void simulateAirTrafficControl(int n, int alpha){
-    char airports[11][10] = { "RON", "SIN", "ALF", "LRV", "BRS", "BH", "SP", "RJ", "SCLS", "BA", "ASS" };
-
     Queue takeoffQueue;
     takeoffQueue.first = NULL;
     takeoffQueue.last = NULL;
@@ -127,77 +164,15 @@ void simulateAirTrafficControl(int n, int alpha){
     control.takeoffsRequests = 0;
     control.late = 0;
     control.accidents = 0;
+    control.landingsWithZeroFuel = 0;
 
-    int takeoffRequests = genRandom(3, 0);
-    for (int i = 0; i < takeoffRequests; i++) {
-        Plane* plane = (Plane*)malloc(sizeof(Plane));
-        plane->id = (control.takeoffsRequests % 2 == 0) ? control.takeoffsRequests + 1 : control.takeoffsRequests;
-        plane->fuel = genRandom(8, 1);
-        plane->origDest = getRandomAirport();
-        plane->isLanded = TRUE;
-        plane->type = DECOLAGEM;
-        plane->waitTime = 1;
-        control.takeoffsRequests++;
-        printf("Pedido: Decolagem: Destino: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], 0, 1 * 15);
-        enqueue(&takeoffQueue, plane);
-    }
-    // Gerar solicitações de aterrissagem
-    int landingRequests = genRandom(4, 0);
-    for (int i = 0; i < landingRequests; i++){
-        Plane* plane = (Plane*)malloc(sizeof(Plane));
-        plane->id = (control.landingRequests % 2 == 0) ? control.landingRequests : control.landingRequests + 1;
-        plane->fuel = genRandom(8, 1);
-        plane->origDest = getRandomAirport();
-        plane->isLanded = FALSE;
-        plane->type = ATERRISSAGEM;
-        plane->waitTime = 1;
-        if(plane->fuel > alpha){
-            enqueue(&landingQueue, plane);
-            printf("Pedido: Aterrissagem: Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], 0, 1 * 15);
-        }
-        else{
-            enqueue(&emergencyQueue, plane);
-            printf("Pedido: Aterrissagem(EMERGENCIAL): Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], 0, 1 * 15);
-        }
-        control.landingRequests++;
-    }
+    // Gerar solicitações de decolagem e aterrissagem
+    requests(&control, &takeoffQueue, &landingQueue, &emergencyQueue, ALPHA, 1);
 
     for (int time = 2; time <= n; time++){
         printf("Tempo: %02d:%02d\n", (time - 1) / 4, ((time - 1) % 4) * 15);
-        // Gerar solicitações de decolagem
-        int takeoffRequests = genRandom(3, 0);
-        for (int i = 0; i < takeoffRequests; i++) {
-            Plane* plane = (Plane*)malloc(sizeof(Plane));
-            plane->id = (control.takeoffsRequests % 2 == 0) ? control.takeoffsRequests + 1 : control.takeoffsRequests;
-            plane->fuel = genRandom(8, 1);
-            plane->origDest = getRandomAirport();
-            plane->isLanded = TRUE;
-            plane->type = 1;  // Decolagem
-            plane->waitTime = 0;
-            printf("Pedido: Decolagem: Destino: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], time / 4, (time % 4) * 15);
-            control.takeoffsRequests++;
-            enqueue(&takeoffQueue, plane);
-        }
-        // Gerar solicitações de aterrissagem
-        int landingRequests = genRandom(4, 0);
-        for (int i = 0; i < landingRequests; i++){
-            Plane* plane = (Plane*)malloc(sizeof(Plane));
-            plane->id = (control.landingRequests % 2 == 0) ? control.landingRequests : control.landingRequests + 1;
-            plane->fuel = genRandom(8, 1);
-            plane->origDest = getRandomAirport();
-            plane->isLanded = FALSE;
-            plane->type = 0;  // Aterrissagem
-            plane->waitTime = 0;
-            if(plane->fuel > alpha){
-                enqueue(&landingQueue, plane);
-                printf("Pedido: Aterrissagem: Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], time / 4, (time % 4) * 15);
-            }
-            else{
-                enqueue(&emergencyQueue, plane);
-                printf("Pedido: Aterrissagem(EMERGENCIAL): Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], time / 4, (time % 4) * 15);
-            }
-            control.landingRequests++;
-        }
+
+        requests(&control, &takeoffQueue, &landingQueue, &emergencyQueue, ALPHA, time);
 
         //solicitar decolagem / pousar emergencial;
         if(emergencyQueue.first != NULL){

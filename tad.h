@@ -18,6 +18,7 @@ typedef struct SCTA {
     int takeoffsRequests;
     int late;
     int accidents;
+    int landingsWithZeroFuel;
 } Control;
 
 typedef struct AIRPLANE {
