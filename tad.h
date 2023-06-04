@@ -26,7 +26,8 @@ typedef struct AIRPLANE {
     Airport origDest;
     int isLanded;
     int type;  // 0 para aterrissagem, 1 para decolagem
-    int waitTime; // tempo para aterrissagem decolagem
+    int waitTimeLanding; // tempo para aterrissagem 
+    int waitTimeDeparture; // tempo para decolagem
     struct AIRPLANE* next;
 } Plane;
 

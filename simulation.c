@@ -17,21 +17,41 @@ Airport getRandomAirport() {
 }
 
 // Calculo do tempo medio de espera
-void averageTime(Queue* queue, int total) {
-    float tempoMedio = 0.0;
+void averageTimeLanding(Queue* queue, int total) {
+    float mean = 0.0;
     Plane* plane = queue->first;
     while (plane != NULL) {
-        tempoMedio += plane->waitTime;
+        mean += plane->waitTimeLanding;
         plane = plane->next;
     }
-    printf("Tempo medio de espera: %f\n", tempoMedio / total);
+    
+    int minutes = (int)(mean / total * 15 + 15);  // Converter para minutos
+    int hours = minutes / 60;  // Obter horas
+    minutes %= 60;  // Obter minutos restantes
+    
+    printf("Tempo medio de espera: %02dh%02dmin\n", hours, minutes);
+}
+
+void averageTimeDeparture(Queue* queue, int total) {
+    float mean = 0.0;
+    Plane* plane = queue->first;
+    while (plane != NULL) {
+        mean += plane->waitTimeDeparture;
+        plane = plane->next;
+    }
+    
+    int minutes = (int)(mean / total * 15 + 15);  // Converter para minutos
+    int hours = minutes / 60;  // Obter horas
+    minutes %= 60;  // Obter minutos restantes
+    
+    printf("Tempo medio de espera: %02dh%02dmin\n", hours, minutes);
 }
 
 void previsao(Plane* plane, int time, int n){
-    if(plane->waitTime > 1){
-        int previsao = (time + plane->waitTime);
+    if(plane->waitTimeLanding > 1){
+        int previsao = (time + plane->waitTimeLanding);
         if(previsao > n){
-            printf("Aterrissagem: Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Após %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (n - 1) / 4, (((n - 1) % 4) * 15) - 1);
+            printf("Aterrissagem: Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Apos %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (n - 1) / 4, (((n - 1) % 4) * 15) - 1);
         }
         else if (plane->type == DECOLAGEM){
             printf("Decolagem: Destino: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (previsao - 1) / 4, ((previsao - 1) % 4) * 15);
@@ -67,20 +87,20 @@ void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue)
 void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time, int n){
     Plane* plane = landingQueue->first;
     while (plane != NULL) {
-        plane->waitTime++;
+        plane->waitTimeLanding++;
         previsao(plane, time, n);
         plane = plane->next;
     }
     plane = takeoffQueue->first;
     while (plane != NULL) {
-        plane->waitTime++;
+        plane->waitTimeDeparture++;
         previsao(plane, time, n);
         plane = plane->next;
 
     }
     plane = emergencyQueue->first;
     while (plane != NULL) {
-        plane->waitTime++;
+        plane->waitTimeLanding++;
         previsao(plane, time, n);
         plane = plane->next;
     }
@@ -131,7 +151,7 @@ void simulateAirTrafficControl(int n, int alpha){
             plane->origDest = getRandomAirport();
             plane->isLanded = TRUE;
             plane->type = 1;  // Decolagem
-            plane->waitTime = 0;
+            plane->waitTimeDeparture = 0;
             control.takeoffsRequests++;
             enqueue(&takeoffQueue, plane);
         }
@@ -144,7 +164,7 @@ void simulateAirTrafficControl(int n, int alpha){
             plane->origDest = getRandomAirport();
             plane->isLanded = FALSE;
             plane->type = 0;  // Aterrissagem
-            plane->waitTime = 0;
+            plane->waitTimeLanding = 0;
             if(plane->fuel > alpha)
                 enqueue(&landingQueue, plane);
             else
@@ -163,7 +183,7 @@ void simulateAirTrafficControl(int n, int alpha){
                             plane = dequeue(&emergencyQueue);
                             lanes[i].busy = 1;
                             plane->isLanded = TRUE;
-                            if (plane->waitTime > 1){
+                            if (plane->waitTimeLanding > 1){
                                 control.late++;
                             }
                             control.landings++;
@@ -174,7 +194,7 @@ void simulateAirTrafficControl(int n, int alpha){
                     else{
                         lanes[i].busy = 1;
                         plane->isLanded = TRUE;
-                        if (plane->waitTime > 1){
+                        if (plane->waitTimeLanding > 1){
                             control.late++;
                         }
                         control.landings++;
@@ -193,7 +213,7 @@ void simulateAirTrafficControl(int n, int alpha){
                         lanes[i].busy = 1;
                         plane->isLanded = TRUE;
                         control.landings++;
-                        if (plane->waitTime > 1){
+                        if (plane->waitTimeLanding > 1){
                             control.late++;
                         }
                         enqueue(&taxiQueue, plane);
@@ -206,7 +226,7 @@ void simulateAirTrafficControl(int n, int alpha){
                 lanes[i].busy = 1;
                 takeoffPlane->isLanded = FALSE;
                 control.takeoffs++;
-                if (takeoffPlane->waitTime > 1){
+                if (takeoffPlane->waitTimeLanding > 1){
                     control.late++;
                 }
                 enqueue(&tookOffQueue, takeoffPlane);
@@ -223,7 +243,7 @@ void simulateAirTrafficControl(int n, int alpha){
                     plane = dequeue(&emergencyQueue);
                     lanes[2].busy = TRUE;
                     plane->isLanded = TRUE;
-                    if (plane->waitTime > 1){
+                    if (plane->waitTimeLanding > 1){
                         control.late++;
                     }
                     control.landings++;
@@ -234,7 +254,7 @@ void simulateAirTrafficControl(int n, int alpha){
             else{
                 lanes[2].busy = TRUE;
                 plane->isLanded = TRUE;
-                if (plane->waitTime > 1){
+                if (plane->waitTimeLanding > 1){
                     control.late++;
                 }
                 control.landings++;
@@ -247,7 +267,7 @@ void simulateAirTrafficControl(int n, int alpha){
             lanes[2].busy = TRUE;
             takeoffPlane->isLanded = FALSE;
             control.takeoffs++;
-            if (takeoffPlane->waitTime > 1){
+            if (takeoffPlane->waitTimeDeparture > 1){
                 control.late++;
             }
             enqueue(&tookOffQueue, takeoffPlane);
@@ -262,7 +282,7 @@ void simulateAirTrafficControl(int n, int alpha){
                     plane = dequeue(&landingQueue);
                     lanes[2].busy = 1;
                     plane->isLanded = TRUE;
-                    if (plane->waitTime > 1){
+                    if (plane->waitTimeLanding > 1){
                         control.late++;
                     }
                     control.landings++;
@@ -273,7 +293,7 @@ void simulateAirTrafficControl(int n, int alpha){
             else {
                 lanes[2].busy = 1;
                 plane->isLanded = TRUE;
-                if (plane->waitTime > 1){
+                if (plane->waitTimeLanding > 1){
                     control.late++;
                 }
                 control.landings++;
@@ -293,8 +313,8 @@ void simulateAirTrafficControl(int n, int alpha){
     printf("Total de aterrissagens: %d\n", control.landings);
     printf("Total de atrasos: %d\n", control.late);
     printf("Total de acidentes: %d\n", control.accidents);
-    averageTime(&taxiQueue, control.landings);
-    averageTime(&tookOffQueue, control.takeoffs);
+    averageTimeLanding(&taxiQueue, control.landings);
+    averageTimeDeparture(&tookOffQueue, control.takeoffs);
 
     freeQueue(&takeoffQueue);
     freeQueue(&landingQueue);

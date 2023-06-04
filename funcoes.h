@@ -13,6 +13,7 @@ void freeQueue(Queue* queue);
 void previsao(Plane* plane, int time, int n);	
 void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue);
 void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time, int n);
-void averageTime(Queue* queue, int total);
+void averageTimeLanding(Queue* queue, int total);
+void averageTimeDeparture(Queue* queue, int total);
 
 #endif /* FUNCOES_H */
