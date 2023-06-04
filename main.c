@@ -89,8 +89,8 @@ void simulateAirTrafficControl(int n, int alpha) {
     landingQueue.last = NULL;
 
     Queue emergencyQueue;
-    landingQueue.first = NULL;
-    landingQueue.last = NULL;
+    emergencyQueue.first = NULL;
+    emergencyQueue.last = NULL;
 
     Lane lanes[3];
 
@@ -121,7 +121,7 @@ void simulateAirTrafficControl(int n, int alpha) {
 
         // Gerar solicitações de aterrissagem
         int landingRequests = genRandom(4, 0);
-        for (int i = 0; i < landingRequests; i++) {
+        for (int i = 0; i < landingRequests; i++){
             Plane* plane = (Plane*)malloc(sizeof(Plane));
             plane->id = (control.landingRequests % 2 == 0) ? control.landingRequests : control.landingRequests + 1;
             plane->fuel = genRandom(8, 1);
@@ -218,6 +218,7 @@ void simulateAirTrafficControl(int n, int alpha) {
             control.landings++;
             printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
         }
+
         // Atualizar o estado das pistas
         for (int i = 0; i < 3; i++) {
             if (lanes[i].busy) {
@@ -278,7 +279,7 @@ int main(int argc, char* argv[]) {
     srand(time(NULL)); // Inicializa a semente para geração de números aleatórios
     if(n > MAX){
         printf("O valor de n deve ser menor ou igual a %d\n", MAX);
-        return 0;
+        return 1;
     }
     simulateAirTrafficControl(n, ALPHA);
 
