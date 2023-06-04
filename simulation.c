@@ -32,10 +32,10 @@ void previsao(Plane* plane, int time, int n){
     if(plane->waitTime > 1){
         if((time + 1) >= n){
             if(plane->type == DECOLAGEM){
-                printf("Decolagem: ID: %d, Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Apos %02d:%02d\n", plane->id, airports[plane->origDest], (time) / 4, ((time) % 4) * 15, n / 4, ((n % 4) * 15) - 1);
+                printf("Decolagem: ID: %d, Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Apos %02d:%02d\n", plane->id, airports[plane->origDest], (time) / 4, ((time) % 4) * 15, n / 4, ((n % 4) * 15));
             }
             else{
-                printf("Aterrissagem: ID: %d, Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Apos %02d:%02d\n", plane->id, airports[plane->origDest], (time) / 4, ((time) % 4) * 15, n / 4, ((n % 4) * 15) - 1);
+                printf("Aterrissagem: ID: %d, Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Apos %02d:%02d\n", plane->id, airports[plane->origDest], (time) / 4, ((time) % 4) * 15, n / 4, ((n % 4) * 15));
             }
         }
         else if (plane->type == DECOLAGEM){
