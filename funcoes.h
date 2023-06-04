@@ -15,5 +15,7 @@ void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue,
 void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time, int n);
 void averageTime(Queue* queue, int total);
 void requests(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, int alpha, int time);
+void lane1and2(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Lane lanes[3],int alpha, int time);
+void lane3(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Lane lanes[3],int alpha, int time);
 
 #endif /* FUNCOES_H */

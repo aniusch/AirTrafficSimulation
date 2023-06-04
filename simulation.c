@@ -59,7 +59,7 @@ void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue,
         plane->fuel--;
         if (plane->fuel < 0 && plane->isLanded == FALSE) {
                 control->accidents++; // Incrementa o contador de acidentes
-                printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
+                printf("Acidente! Aviao com identificador %d sofreu um acidente por falta de combustivel.\n", plane->id);
         }
         plane = plane->next;
     }
@@ -104,7 +104,7 @@ void requests(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue 
             plane->fuel = genRandom(8, 1);
             plane->origDest = getRandomAirport();
             plane->isLanded = TRUE;
-            plane->type = 1;  // Decolagem
+            plane->type = DECOLAGEM;  // Decolagem
             plane->waitTime = 0;
             printf("Pedido: Decolagem: Destino: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], time / 4, (time % 4) * 15);
             control->takeoffsRequests++;
@@ -118,20 +118,144 @@ void requests(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue 
             plane->fuel = genRandom(8, 1);
             plane->origDest = getRandomAirport();
             plane->isLanded = FALSE;
-            plane->type = 0;  // Aterrissagem
+            plane->type = ATERRISSAGEM;  // Aterrissagem
             plane->waitTime = 0;
             if(plane->fuel > alpha){
                 enqueue(landingQueue, plane);
-                printf("Pedido: Aterrissagem: Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], time / 4, (time % 4) * 15);
+                printf("Pedido: Aterrissagem: Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], (time + 1) / 4, ((time + 1) % 4) * 15);
             }
             else{
                 enqueue(emergencyQueue, plane);
-                printf("Pedido: Aterrissagem(EMERGENCIAL): Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], time / 4, (time % 4) * 15);
+                printf("Pedido: Aterrissagem(EMERGENCIAL): Origem: %s, Horario: %02d:%02d, Situacao: Previsto\n", airports[plane->origDest], (time + 1) / 4, ((time + 1) % 4) * 15);
             }
             control->landingRequests++;
         }
 }
 
+//simula a decolagem / pouso de emergenciais na pista 3
+void lane3(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Lane lanes[3],int alpha, int time){
+    Plane* plane = NULL;
+    if(emergencyQueue->first != NULL && lanes[2].busy == FALSE){
+        plane = dequeue(emergencyQueue);
+        if (plane->fuel >= 0){
+            control->landings++;
+            if(plane->waitTime > 1){
+                control->late++;
+            }
+            if(plane->fuel == 0){
+                control->landingsWithZeroFuel++;
+            }
+            lanes[2].busy = TRUE;
+            plane->isLanded = TRUE;
+            printf("Aterrissagem (Pista %d): ID: %d, Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, plane->id, airports[plane->origDest], time / 4, (time  % 4) * 15);
+        }
+        else if (plane->fuel < 0 && emergencyQueue->first != NULL){
+            while(emergencyQueue->first != NULL){
+                plane = dequeue(emergencyQueue);
+                if (plane->fuel >= 0){
+                    control->landings++;
+                    if(plane->waitTime > 1){
+                        control->late++;
+                    }
+                    if(plane->fuel == 0){
+                        control->landingsWithZeroFuel++;
+                    }
+                    lanes[2].busy = TRUE;
+                    plane->isLanded = TRUE;
+                    printf("Aterrissagem (Pista %d): ID: %d, Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, plane->id, airports[plane->origDest], time / 4, (time  % 4) * 15);
+                    break;
+                }
+            }
+        }
+    }
+    if (takeoffQueue->first != NULL && lanes[2].busy == FALSE){
+        plane = dequeue(takeoffQueue);
+        lanes[2].busy = TRUE;
+        plane->isLanded = FALSE;
+        control->takeoffs++;
+        if (plane->waitTime > 1){
+            control->late++;
+        }
+        printf("Decolagem (Pista %d): ID: %d, Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, plane->id, airports[plane->origDest], time / 4, (time  % 4) * 15);
+    }
+    lanes[2].busy = FALSE;
+}
+
+//simula pouso nas pistas 1 e 2
+void lane1and2(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Lane lanes[3],int alpha, int time){
+    Plane *plane = NULL;
+    for(int i = 0; i < 2; i++){
+        if (emergencyQueue->first != NULL && lanes[i].busy == FALSE){
+            plane = dequeue(emergencyQueue);
+            if (plane->fuel >= 0){
+                control->landings++;
+                if(plane->waitTime > 1){
+                    control->late++;
+                }
+                if(plane->fuel == 0){
+                    control->landingsWithZeroFuel++;
+                }
+                lanes[2].busy = TRUE;
+                plane->isLanded = TRUE;
+                printf("Aterrissagem EMERGENCIAL (Pista %d): ID: %d, Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, plane->id, airports[plane->origDest], time / 4, (time  % 4) * 15);
+            }
+            else if (plane->fuel < 0 && emergencyQueue->first != NULL){
+                while(emergencyQueue->first != NULL){
+                    plane = dequeue(emergencyQueue);
+                    if (plane->fuel >= 0){
+                        control->landings++;
+                        if(plane->waitTime > 1){
+                            control->late++;
+                        }
+                        if(plane->fuel == 0){
+                            control->landingsWithZeroFuel++;
+                        }
+                        lanes[2].busy = TRUE;
+                        plane->isLanded = TRUE;
+                        printf("Aterrissagem EMERGENCIAL (Pista %d): ID: %d, Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, plane->id, airports[plane->origDest], time / 4, (time  % 4) * 15);
+                        break;
+                    }
+                }
+            }
+        }
+        if(landingQueue->first != NULL && lanes[i].busy == FALSE){
+            plane = dequeue(landingQueue);
+            if (plane->fuel >= 0){
+                control->landings++;
+                if(plane->waitTime > 1){
+                    control->late++;
+                }
+                if(plane->fuel == 0){
+                    control->landingsWithZeroFuel++;
+                }
+                lanes[2].busy = TRUE;
+                plane->isLanded = TRUE;
+                printf("Aterrissagem (Pista %d): ID: %d, Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, plane->id, airports[plane->origDest], time / 4, (time  % 4) * 15);
+            }
+            else if (plane->fuel < 0 && landingQueue->first != NULL){
+                while(landingQueue->first != NULL){
+                    plane = dequeue(landingQueue);
+                    if (plane->fuel >= 0){
+                        control->landings++;
+                        if(plane->waitTime > 1){
+                            control->late++;
+                        }
+                        if(plane->fuel == 0){
+                            control->landingsWithZeroFuel++;
+                        }
+                        lanes[2].busy = TRUE;
+                        plane->isLanded = TRUE;
+                        printf("Aterrissagem (Pista %d): ID: %d, Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, plane->id, airports[plane->origDest], time / 4, (time  % 4) * 15);
+                        break;
+                    }
+                }
+            }
+        }  
+    }
+    lanes[0].busy = FALSE;
+    lanes[1].busy = FALSE;
+
+}
 
 // Simula o controle de tráfego aéreo
 void simulateAirTrafficControl(int n, int alpha){
@@ -165,21 +289,40 @@ void simulateAirTrafficControl(int n, int alpha){
     control.late = 0;
     control.accidents = 0;
     control.landingsWithZeroFuel = 0;
+    int time = 0;
 
-    // Gerar solicitações de decolagem e aterrissagem
-    requests(&control, &takeoffQueue, &landingQueue, &emergencyQueue, ALPHA, 1);
+    
+    
+    
+    while(time != n){
+        printf("Horario atual: %02d:%02d\n", (time) / 4, ((time) % 4) * 15);
 
-    for (int time = 2; time <= n; time++){
-        printf("Tempo: %02d:%02d\n", (time - 1) / 4, ((time - 1) % 4) * 15);
-
+        // Gerar solicitações de decolagem e aterrissagem
         requests(&control, &takeoffQueue, &landingQueue, &emergencyQueue, ALPHA, time);
 
+        //solicitar decolagem / pousar emergencial;
+        lane3(&control, &takeoffQueue, &landingQueue, &emergencyQueue, lanes, ALPHA, time);
+
+        //solicitar aterrissagem
+        lane1and2(&control, &takeoffQueue, &landingQueue, &emergencyQueue, lanes, ALPHA, time);
+
+        //incrementa tempo em uma unidade
+        time++;
+
+        //combustivel eh decrementado em uma unidade
+        updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue, &control);
+
+        printf("\n");
+    }
+
+    /*
+        for (int time = 2; time <= n; time++){
+        printf("Tempo: %02d:%02d\n", (time - 1) / 4, ((time - 1) % 4) * 15);
+        requests(&control, &takeoffQueue, &landingQueue, &emergencyQueue, ALPHA, time);
         //solicitar decolagem / pousar emergencial;
         if(emergencyQueue.first != NULL){
             Plane* plane = dequeue(&emergencyQueue);
             if (plane->fuel < 0) {
-                control.accidents++; // Incrementa o contador de acidentes
-                printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
                 if(emergencyQueue.first != NULL){
                     plane = dequeue(&emergencyQueue);
                     lanes[2].busy = TRUE;
@@ -187,16 +330,22 @@ void simulateAirTrafficControl(int n, int alpha){
                     if (plane->waitTime > 1){
                         control.late++;
                     }
+                    if (plane->fuel == 0){
+                        control.landingsWithZeroFuel++;
+                    }
                     control.landings++;
                     enqueue(&taxiQueue, plane);
                     printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                 }
-            }
+            }    
             else{
                 lanes[2].busy = TRUE;
                 plane->isLanded = TRUE;
                 if (plane->waitTime > 1){
                     control.late++;
+                }
+                if (plane->fuel == 0){
+                    control.landingsWithZeroFuel++;
                 }
                 control.landings++;
                 enqueue(&taxiQueue, plane);
@@ -204,27 +353,28 @@ void simulateAirTrafficControl(int n, int alpha){
             }
         }
         else if(takeoffQueue.first != NULL){
-            Plane* takeoffPlane = dequeue(&takeoffQueue);
+            Plane* plane = dequeue(&takeoffQueue);
             lanes[2].busy = TRUE;
-            takeoffPlane->isLanded = FALSE;
+            plane->isLanded = FALSE;
             control.takeoffs++;
-            if (takeoffPlane->waitTime > 1){
+            if (plane->waitTime > 1){
                 control.late++;
             }
-            enqueue(&tookOffQueue, takeoffPlane);
-            printf("Decolagem (Pista %d): Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[takeoffPlane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);                   
+            enqueue(&tookOffQueue, plane);
+            printf("Decolagem (Pista %d): Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);                   
         }
         else if (landingQueue.first != NULL){
             Plane* plane = dequeue(&landingQueue);
             if (plane->fuel < 0 && plane->isLanded == FALSE){
-                control.accidents++; // Incrementa o contador de acidentes
-                printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
                 if (landingQueue.first != NULL){
                     plane = dequeue(&landingQueue);
                     lanes[2].busy = 1;
                     plane->isLanded = TRUE;
                     if (plane->waitTime > 1){
                         control.late++;
+                    }
+                    if (plane->fuel == 0){
+                        control.landingsWithZeroFuel++;
                     }
                     control.landings++;
                     enqueue(&taxiQueue, plane);
@@ -237,20 +387,20 @@ void simulateAirTrafficControl(int n, int alpha){
                 if (plane->waitTime > 1){
                     control.late++;
                 }
+                if (plane->fuel == 0){
+                    control.landingsWithZeroFuel++;
+                }
                 control.landings++;
                 enqueue(&taxiQueue, plane);
                 printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
             }
         }
-
         //solicitar aterrissagem
         for (int i = 0; i < 2; i++){
             if (emergencyQueue.first != NULL){
                 if(emergencyQueue.first->next != NULL){
                     Plane* plane = dequeue(&emergencyQueue);
                     if (plane->fuel < 0 && plane->isLanded == FALSE){
-                        control.accidents++; // Incrementa o contador de acidentes
-                        printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
                         if (emergencyQueue.first != NULL){
                             plane = dequeue(&emergencyQueue);
                             lanes[i].busy = 1;
@@ -258,10 +408,40 @@ void simulateAirTrafficControl(int n, int alpha){
                             if (plane->waitTime > 1){
                                 control.late++;
                             }
+                            if (plane->fuel == 0){
+                                control.landingsWithZeroFuel++;
+                            }
                             control.landings++;
                             enqueue(&taxiQueue, plane);
                             printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);        
-                        } 
+                        }
+                    }
+                    else if(landingQueue.first != NULL){
+                            Plane* plane = dequeue(&landingQueue);
+                            if (plane->fuel < 0) {
+                                if (landingQueue.first != NULL){
+                                    plane = dequeue(&landingQueue);
+                                    lanes[i].busy = 1;
+                                    plane->isLanded = TRUE;
+                                    control.landings++;
+                                    if (plane->waitTime > 1){
+                                        control.late++;
+                                    }
+                                    enqueue(&taxiQueue, plane);
+                                    printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);        
+                                } 
+                            }
+                        }
+                    else if (takeoffQueue.first != NULL){
+                            Plane* takeoffPlane = dequeue(&takeoffQueue);
+                            lanes[i].busy = 1;
+                            takeoffPlane->isLanded = FALSE;
+                            control.takeoffs++;
+                            if (takeoffPlane->waitTime > 1){
+                                control.late++;
+                            }
+                            enqueue(&tookOffQueue, takeoffPlane);
+                            printf("Decolagem (Pista %d): Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[takeoffPlane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);       
                     }
                     else{
                         lanes[i].busy = 1;
@@ -273,13 +453,10 @@ void simulateAirTrafficControl(int n, int alpha){
                         enqueue(&taxiQueue, plane);
                         printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                     }
-                }    
-            }
+                }
             else if(landingQueue.first != NULL){
                 Plane* plane = dequeue(&landingQueue);
                 if (plane->fuel < 1) {
-                    control.accidents++; // Incrementa o contador de acidentes
-                    printf("Acidente! Aviao com identificador %d caiu por falta de combustivel.\n", plane->id);
                     if (landingQueue.first != NULL){
                         plane = dequeue(&landingQueue);
                         lanes[i].busy = 1;
@@ -305,13 +482,15 @@ void simulateAirTrafficControl(int n, int alpha){
                 printf("Decolagem (Pista %d): Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[takeoffPlane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);                   
             }
         }
+        }
+    
 
         updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue, &control);
         updateWaitingTime(&takeoffQueue, &landingQueue, &emergencyQueue, &control, time, n);
 
         printf("\n");
     }
-
+    */
     // Exibir informações de controle
     printf("Total de decolagens: %d\n", control.takeoffs);
     printf("Total de aterrissagens: %d\n", control.landings);
