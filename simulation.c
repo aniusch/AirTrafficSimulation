@@ -22,7 +22,7 @@ void averageTime(float *sum, int total) {
     int averageInMinutes = (int)(aux / total * 15);
     int hours = averageInMinutes / 60;
     int minutes = averageInMinutes % 60;
-    printf("%02dh:%02dmin\n", hours, minutes);
+    printf("%02dh%02dmin\n", hours, minutes);
 }
 
 void previsao(Plane* plane, int time){
@@ -347,7 +347,9 @@ void simulateAirTrafficControl(int n, int alpha){
     printf("Total de aterrissagens sem reserva: %d\n", control.landingsWithZeroFuel);
     printf("Total de atrasos: %d\n", control.late);
     printf("Total de acidentes: %d\n", control.accidents);
+    printf("Tempo medio de espera para aterrissagem: ");
     averageTime(&sumWaitingLanding, control.landings);
+    printf("Tempo medio de espera para decolagem: ");
     averageTime(&sumWaitingTakeoff, control.takeoffs);
 
     freeQueue(&takeoffQueue);
