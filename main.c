@@ -5,7 +5,7 @@
 #define TRUE 1
 #define FALSE 0
 #define MAX 96
-#define ALPHA 4
+#define ALPHA 6
 
 typedef enum { RON, SIN, ALF, LRV, BRS, BH, SP, RJ, SCLS, BA, ASS } Airport;
 char airports[11][10] = { "RON", "SIN", "ALF", "LRV", "BRS", "BH", "SP", "RJ", "SCLS", "BA", "ASS" };
@@ -54,6 +54,13 @@ Airport getRandomAirport() {
     return genRandom(ASS, RON);
 }
 
+int emptyQueue(Queue* queue) {
+    if (queue->first == queue->last) {
+        return 1;
+    }
+    return 0;
+}
+
 // Insere um avião no final da fila
 void enqueue(Queue* queue, Plane* newPlane) {
     if (queue->last != NULL) {
@@ -76,6 +83,16 @@ Plane* dequeue(Queue* queue) {
         }
     }
     return plane;
+}
+
+void deleteQueue(Queue* queue) {
+    while(!emptyQueue) {
+        dequeue(queue);
+    }
+    free(queue->first);
+    queue->first = NULL;
+    queue->last = NULL;
+    free(queue);
 }
 
 // Simula o controle de tráfego aéreo
@@ -271,6 +288,9 @@ void simulateAirTrafficControl(int n, int alpha) {
 //    if (control.landings > 0) {
 //        printf("Tempo medio de espera para aterrissagem: %.2f\n", (float)control.lateLandingTime / control.landings);
 //   }
+    deleteQueue(&landingQueue);
+    deleteQueue(&takeoffQueue);
+    deleteQueue(&emergencyQueue);
 }
 
 int main(int argc, char* argv[]) {
@@ -282,6 +302,5 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     simulateAirTrafficControl(n, ALPHA);
-
     return 0;
 }
