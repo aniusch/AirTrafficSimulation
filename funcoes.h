@@ -14,5 +14,6 @@ void previsao(Plane* plane, int time, int n);
 void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control);
 void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time, int n);
 void averageTime(Queue* queue, int total);
+void requests(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, int alpha, int time);
 
 #endif /* FUNCOES_H */
