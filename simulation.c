@@ -24,7 +24,8 @@ void averageTime(Queue* queue, int total) {
         tempoMedio += plane->waitTime;
         plane = plane->next;
     }
-    printf("Tempo medio de espera: %f\n", tempoMedio / total);
+    int tempoMedioMin = tempoMedio / total;
+    printf("Tempo medio de espera aproximadamente: %d minutos\n", tempoMedioMin + 1);
 }
 
 void previsao(Plane* plane, int time, int n){
