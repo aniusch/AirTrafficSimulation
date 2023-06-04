@@ -5,7 +5,7 @@
 #define TRUE 1
 #define FALSE 0
 #define MAX 96
-#define ALPHA 1
+#define ALPHA 2
 #define ATERRISSAGEM 0
 #define DECOLAGEM 1
 
@@ -26,6 +26,7 @@ typedef struct AIRPLANE {
     int fuel;
     Airport origDest;
     int isLanded;
+    int isLate;
     int type;  // 0 para aterrissagem, 1 para decolagem
     int waitTime; // tempo para aterrissagem decolagem
     struct AIRPLANE* next;
