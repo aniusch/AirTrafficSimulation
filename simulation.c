@@ -32,7 +32,7 @@ void previsao(Plane* plane, int time, int n){
     if(plane->waitTime > 1){
         int previsao = (time + plane->waitTime);
         if(previsao > n){
-            printf("Aterrissagem: Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Após %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (n - 1) / 4, (((n - 1) % 4) * 15) - 1);
+            printf("Aterrissagem: Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Apos %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (n - 1) / 4, (((n - 1) % 4) * 15) - 1);
         }
         else if (plane->type == DECOLAGEM){
             printf("Decolagem: Destino: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (previsao - 1) / 4, ((previsao - 1) % 4) * 15);
@@ -42,7 +42,6 @@ void previsao(Plane* plane, int time, int n){
         }
     }
 }
-
 
 //Atualizar o combustivel
 void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue){
@@ -69,20 +68,17 @@ void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergenc
     Plane* plane = landingQueue->first;
     while (plane != NULL) {
         plane->waitTime++;
-        previsao(plane, time, n);
         plane = plane->next;
     }
     plane = takeoffQueue->first;
     while (plane != NULL) {
         plane->waitTime++;
-        previsao(plane, time, n);
         plane = plane->next;
 
     }
     plane = emergencyQueue->first;
     while (plane != NULL) {
         plane->waitTime++;
-        previsao(plane, time, n);
         plane = plane->next;
     }
 }
@@ -121,7 +117,35 @@ void simulateAirTrafficControl(int n, int alpha){
     control.late = 0;
     control.accidents = 0;
 
-    for (int time = 1; time <= n; time++){
+    int takeoffRequests = genRandom(3, 0);
+    for (int i = 0; i < takeoffRequests; i++) {
+        Plane* plane = (Plane*)malloc(sizeof(Plane));
+        plane->id = (control.takeoffsRequests % 2 == 0) ? control.takeoffsRequests + 1 : control.takeoffsRequests;
+        plane->fuel = genRandom(8, 1);
+        plane->origDest = getRandomAirport();
+        plane->isLanded = TRUE;
+        plane->type = 1;  // Decolagem
+        plane->waitTime = 0;
+        control.takeoffsRequests++;
+        enqueue(&takeoffQueue, plane);
+    }
+    // Gerar solicitações de aterrissagem
+    int landingRequests = genRandom(4, 0);
+    for (int i = 0; i < landingRequests; i++){
+        Plane* plane = (Plane*)malloc(sizeof(Plane));
+        plane->id = (control.landingRequests % 2 == 0) ? control.landingRequests : control.landingRequests + 1;
+        plane->fuel = genRandom(8, 1);
+        plane->origDest = getRandomAirport();
+        plane->isLanded = FALSE;
+        plane->type = 0;  // Aterrissagem
+        plane->waitTime = 0;
+        if(plane->fuel > alpha)
+            enqueue(&landingQueue, plane);
+        else
+            enqueue(&emergencyQueue, plane);
+        control.landingRequests++;
+    }
+    for (int time = 2; time <= n; time++){
         printf("Tempo: %02d:%02d\n", (time - 1) / 4, ((time - 1) % 4) * 15);
         // Gerar solicitações de decolagem
         int takeoffRequests = genRandom(3, 0);
@@ -133,6 +157,7 @@ void simulateAirTrafficControl(int n, int alpha){
             plane->isLanded = TRUE;
             plane->type = 1;  // Decolagem
             plane->waitTime = 0;
+
             control.takeoffsRequests++;
             enqueue(&takeoffQueue, plane);
         }
