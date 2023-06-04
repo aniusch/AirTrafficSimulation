@@ -13,9 +13,9 @@ void freeQueue(Queue* queue);
 void previsao(Plane* plane, int time);	
 void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control);
 void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time);
-void averageTime(Queue* queue, int total);
+void averageTime(float *sum, int total);
 void requests(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, int alpha, int time);
-void lane1and2(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Lane lanes[3],int alpha, int time);
-void lane3(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Lane lanes[3],int alpha, int time);
+void lane1and2(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Lane lanes[3],int alpha, int time, float *waitTime);
+void lane3(Control *control, Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Lane lanes[3],int alpha, int time, float *waitTime);
 
 #endif /* FUNCOES_H */
