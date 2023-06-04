@@ -85,6 +85,7 @@ void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergenc
 
 // Simula o controle de tráfego aéreo
 void simulateAirTrafficControl(int n, int alpha){
+    char airports[11][10] = { "RON", "SIN", "ALF", "LRV", "BRS", "BH", "SP", "RJ", "SCLS", "BA", "ASS" };
 
     Queue takeoffQueue;
     takeoffQueue.first = NULL;
@@ -97,6 +98,14 @@ void simulateAirTrafficControl(int n, int alpha){
     Queue emergencyQueue;
     emergencyQueue.first = NULL;
     emergencyQueue.last = NULL;
+
+    Queue taxiQueue; // fila para avioes que ja pousaram
+    taxiQueue.first = NULL;
+    taxiQueue.last = NULL;
+
+    Queue tookOffQueue; // fila para avioes que ja decolaram
+    tookOffQueue.first = NULL;
+    tookOffQueue.last = NULL;
 
     Lane lanes[3];
 
@@ -118,7 +127,7 @@ void simulateAirTrafficControl(int n, int alpha){
             plane->fuel = genRandom(8, 1);
             plane->origDest = getRandomAirport();
             plane->isLanded = TRUE;
-            plane->type = DECOLAGEM; 
+            plane->type = 1;  // Decolagem
             plane->waitTime = 0;
             control.takeoffsRequests++;
             enqueue(&takeoffQueue, plane);
@@ -131,7 +140,7 @@ void simulateAirTrafficControl(int n, int alpha){
             plane->fuel = genRandom(8, 1);
             plane->origDest = getRandomAirport();
             plane->isLanded = FALSE;
-            plane->type = ATERRISSAGEM; 
+            plane->type = 0;  // Aterrissagem
             plane->waitTime = 0;
             if(plane->fuel > alpha)
                 enqueue(&landingQueue, plane);
@@ -155,6 +164,7 @@ void simulateAirTrafficControl(int n, int alpha){
                                 control.late++;
                             }
                             control.landings++;
+                            enqueue(&taxiQueue, plane);
                             printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);        
                         } 
                     }
@@ -165,6 +175,7 @@ void simulateAirTrafficControl(int n, int alpha){
                             control.late++;
                         }
                         control.landings++;
+                        enqueue(&taxiQueue, plane);
                         printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                     }
                 }    
@@ -182,6 +193,7 @@ void simulateAirTrafficControl(int n, int alpha){
                         if (plane->waitTime > 1){
                             control.late++;
                         }
+                        enqueue(&taxiQueue, plane);
                         printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);        
                     } 
                 }
@@ -194,6 +206,7 @@ void simulateAirTrafficControl(int n, int alpha){
                 if (takeoffPlane->waitTime > 1){
                     control.late++;
                 }
+                enqueue(&tookOffQueue, takeoffPlane);
                 printf("Decolagem (Pista %d): Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[takeoffPlane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);                   
             }
         }
@@ -211,6 +224,7 @@ void simulateAirTrafficControl(int n, int alpha){
                         control.late++;
                     }
                     control.landings++;
+                    enqueue(&taxiQueue, plane);
                     printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                 }
             }
@@ -221,6 +235,7 @@ void simulateAirTrafficControl(int n, int alpha){
                     control.late++;
                 }
                 control.landings++;
+                enqueue(&taxiQueue, plane);
                 printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
             }
         }
@@ -232,6 +247,7 @@ void simulateAirTrafficControl(int n, int alpha){
             if (takeoffPlane->waitTime > 1){
                 control.late++;
             }
+            enqueue(&tookOffQueue, takeoffPlane);
             printf("Decolagem (Pista %d): Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[takeoffPlane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);                   
         }
         else if (landingQueue.first != NULL){
@@ -247,24 +263,19 @@ void simulateAirTrafficControl(int n, int alpha){
                         control.late++;
                     }
                     control.landings++;
-                     printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
+                    enqueue(&taxiQueue, plane);
+                    printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                 } 
             }
-            else{
+            else {
                 lanes[2].busy = 1;
                 plane->isLanded = TRUE;
                 if (plane->waitTime > 1){
                     control.late++;
                 }
                 control.landings++;
+                enqueue(&taxiQueue, plane);
                 printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
-            }
-        }
-
-        // Atualizar o estado das pistas
-        for (int i = 0; i < 3; i++) {
-            if (lanes[i].busy) {
-                lanes[i].busy = FALSE;
             }
         }
 
