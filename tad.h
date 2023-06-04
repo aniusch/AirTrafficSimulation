@@ -5,7 +5,7 @@
 #define TRUE 1
 #define FALSE 0
 #define MAX 96
-#define ALPHA 4
+#define ALPHA 6
 
 typedef enum { RON, SIN, ALF, LRV, BRS, BH, SP, RJ, SCLS, BA, ASS } Airport;
 

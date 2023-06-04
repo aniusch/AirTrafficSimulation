@@ -14,6 +14,17 @@ Airport getRandomAirport() {
     return genRandom(ASS, RON);
 }
 
+// Calculo do tempo medio de espera
+void averageTime(Queue* queue, int total) {
+    float tempoMedio = 0.0;
+    Plane* plane = queue->first;
+    while (plane != NULL) {
+        tempoMedio += plane->waitTime;
+        plane = plane->next;
+    }
+    printf("Tempo medio de espera: %f\n", tempoMedio / total);
+}
+
 // Simula o controle de tráfego aéreo
 void simulateAirTrafficControl(int n, int alpha){
     char airports[11][10] = { "RON", "SIN", "ALF", "LRV", "BRS", "BH", "SP", "RJ", "SCLS", "BA", "ASS" };
@@ -29,6 +40,14 @@ void simulateAirTrafficControl(int n, int alpha){
     Queue emergencyQueue;
     emergencyQueue.first = NULL;
     emergencyQueue.last = NULL;
+
+    Queue taxiQueue; // fila para avioes que ja pousaram
+    taxiQueue.first = NULL;
+    taxiQueue.last = NULL;
+
+    Queue tookOffQueue; // fila para avioes que ja decolaram
+    tookOffQueue.first = NULL;
+    tookOffQueue.last = NULL;
 
     Lane lanes[3];
 
@@ -87,6 +106,7 @@ void simulateAirTrafficControl(int n, int alpha){
                                 control.late++;
                             }
                             control.landings++;
+                            enqueue(&taxiQueue, plane);
                             printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);        
                         } 
                     }
@@ -97,6 +117,7 @@ void simulateAirTrafficControl(int n, int alpha){
                             control.late++;
                         }
                         control.landings++;
+                        enqueue(&taxiQueue, plane);
                         printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                     }
                 }    
@@ -114,6 +135,7 @@ void simulateAirTrafficControl(int n, int alpha){
                         if (plane->waitTime > 1){
                             control.late++;
                         }
+                        enqueue(&taxiQueue, plane);
                         printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);        
                     } 
                 }
@@ -126,6 +148,7 @@ void simulateAirTrafficControl(int n, int alpha){
                 if (takeoffPlane->waitTime > 1){
                     control.late++;
                 }
+                enqueue(&tookOffQueue, takeoffPlane);
                 printf("Decolagem (Pista %d): Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[takeoffPlane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);                   
             }
         }
@@ -143,6 +166,7 @@ void simulateAirTrafficControl(int n, int alpha){
                         control.late++;
                     }
                     control.landings++;
+                    enqueue(&taxiQueue, plane);
                     printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                 }
             }
@@ -153,6 +177,7 @@ void simulateAirTrafficControl(int n, int alpha){
                     control.late++;
                 }
                 control.landings++;
+                enqueue(&taxiQueue, plane);
                 printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 3, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
             }
         }
@@ -164,6 +189,7 @@ void simulateAirTrafficControl(int n, int alpha){
             if (takeoffPlane->waitTime > 1){
                 control.late++;
             }
+            enqueue(&tookOffQueue, takeoffPlane);
             printf("Decolagem (Pista %d): Destino: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[takeoffPlane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);                   
         }
         else if (landingQueue.first != NULL){
@@ -179,16 +205,18 @@ void simulateAirTrafficControl(int n, int alpha){
                         control.late++;
                     }
                     control.landings++;
-                     printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
+                    enqueue(&taxiQueue, plane);
+                    printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
                 } 
             }
-            else{
+            else {
                 lanes[2].busy = 1;
                 plane->isLanded = TRUE;
                 if (plane->waitTime > 1){
                     control.late++;
                 }
                 control.landings++;
+                enqueue(&taxiQueue, plane);
                 printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", 2, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
             }
         }
@@ -233,11 +261,16 @@ void simulateAirTrafficControl(int n, int alpha){
         printf("\n");
     }
 
+    
+
+
     // Exibir informações de controle
     printf("Total de decolagens: %d\n", control.takeoffs);
     printf("Total de aterrissagens: %d\n", control.landings);
     printf("Total de atrasos: %d\n", control.late);
     printf("Total de acidentes: %d\n", control.accidents);
+    averageTime(&taxiQueue, control.landings);
+    averageTime(&tookOffQueue, control.takeoffs);
 
     freeQueue(&takeoffQueue);
     freeQueue(&landingQueue);
@@ -245,3 +278,5 @@ void simulateAirTrafficControl(int n, int alpha){
     
 
 }
+
+
