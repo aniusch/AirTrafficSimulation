@@ -17,7 +17,7 @@ Airport getRandomAirport() {
 }
 
 // Calculo do tempo medio de espera
-void averageTime(Queue* queue, int total){
+void averageTime(Queue* queue, int total) {
     float tempoMedio = 0.0;
     Plane* plane = queue->first;
     while (plane != NULL) {
@@ -27,10 +27,13 @@ void averageTime(Queue* queue, int total){
     printf("Tempo medio de espera: %f\n", tempoMedio / total);
 }
 
-void previsao(Plane* plane, int time){
+void previsao(Plane* plane, int time, int n){
     if(plane->waitTime > 1){
         int previsao = (time + plane->waitTime);
-        if (plane->type == DECOLAGEM){
+        if(previsao > n){
+            printf("Aterrissagem: Origem: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: Após %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (n - 1) / 4, (((n - 1) % 4) * 15) - 1);
+        }
+        else if (plane->type == DECOLAGEM){
             printf("Decolagem: Destino: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: %02d:%02d\n", airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15, (previsao - 1) / 4, ((previsao - 1) % 4) * 15);
         }
         else{
@@ -61,24 +64,24 @@ void updateFuel(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue)
 }
 
 // Atualizar o tempo de espera das aeronaves
-void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time){
+void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergencyQueue, Control *control, int time, int n){
     Plane* plane = landingQueue->first;
     while (plane != NULL) {
         plane->waitTime++;
-        previsao(plane, time);
+        previsao(plane, time, n);
         plane = plane->next;
     }
     plane = takeoffQueue->first;
     while (plane != NULL) {
         plane->waitTime++;
-        previsao(plane, time);
+        previsao(plane, time, n);
         plane = plane->next;
 
     }
     plane = emergencyQueue->first;
     while (plane != NULL) {
         plane->waitTime++;
-        previsao(plane, time);
+        previsao(plane, time, n);
         plane = plane->next;
     }
 }
@@ -280,7 +283,7 @@ void simulateAirTrafficControl(int n, int alpha){
         }
 
         updateFuel(&takeoffQueue, &landingQueue, &emergencyQueue);
-        updateWaitingTime(&takeoffQueue, &landingQueue, &emergencyQueue, &control, time);
+        updateWaitingTime(&takeoffQueue, &landingQueue, &emergencyQueue, &control, time, n);
 
         printf("\n");
     }
@@ -296,6 +299,4 @@ void simulateAirTrafficControl(int n, int alpha){
     freeQueue(&takeoffQueue);
     freeQueue(&landingQueue);
     freeQueue(&emergencyQueue);
-    
-
 }

@@ -5,7 +5,7 @@
 #define TRUE 1
 #define FALSE 0
 #define MAX 96
-#define ALPHA 4
+#define ALPHA 5
 #define ATERRISSAGEM 0
 #define DECOLAGEM 1
 
