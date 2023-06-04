@@ -137,7 +137,7 @@ void simulateAirTrafficControl(int n, int alpha) {
         }
 
         for (int i = 0; i < 2; i++) {
-            if (landingQueue.first != NULL && emergencyQueue.first->next == NULL){
+            if (landingQueue.first != NULL && emergencyQueue.first != NULL && emergencyQueue.first->next == NULL){
                 Plane* plane = dequeue(&landingQueue);
                 if (plane->fuel < 1 && plane->isLanded == FALSE){
                     control.accidents++; // Incrementa o contador de acidentes
@@ -152,7 +152,7 @@ void simulateAirTrafficControl(int n, int alpha) {
                 control.landings++;
                 printf("Aterrissagem (Pista %d): Origem: %s, Horario: %02d:%02d, Situacao: Confirmado\n", i + 1, airports[plane->origDest], (time - 1) / 4, ((time - 1) % 4) * 15);
             }
-            if(emergencyQueue.first->next != NULL){
+            if(emergencyQueue.first != NULL && emergencyQueue.first->next != NULL){
                 Plane* plane = dequeue(&emergencyQueue);
                 if (plane->fuel < 1) {
                     control.accidents++; // Incrementa o contador de acidentes
