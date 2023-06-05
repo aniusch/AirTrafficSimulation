@@ -25,7 +25,7 @@ void averageTime(float *sum, int total) {
     printf("%02dh%02dmin\n", hours, minutes);
 }
 
-void previsao(Plane* plane, int time){
+void prediction(Plane* plane, int time){
     if(plane->waitTime > 1){
         if (plane->type == DECOLAGEM){
             printf("Decolagem: ID: %d, Destino: %s, Previsao: %02d:%02d, Situacao: Atrasado, Nova Previsao: %02d:%02d\n", plane->id, airports[plane->origDest], (time) / 4, ((time) % 4) * 15, (time + 1) / 4, ((time + 1) % 4) * 15);
@@ -78,7 +78,7 @@ void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergenc
                 plane->isLate = TRUE;
                 control->late++;
             }
-            previsao(plane, time);
+            prediction(plane, time);
         }
         plane = plane->next;
     }
@@ -90,7 +90,7 @@ void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergenc
                 plane->isLate = TRUE;
                 control->late++;
             }
-            previsao(plane, time);
+            prediction(plane, time);
         }
         plane = plane->next;
 
@@ -103,7 +103,7 @@ void updateWaitingTime(Queue *takeoffQueue, Queue *landingQueue, Queue *emergenc
                 plane->isLate = TRUE;
                 control->late++;
             }
-            previsao(plane, time);
+            prediction(plane, time);
         }
         plane = plane->next;
     }
